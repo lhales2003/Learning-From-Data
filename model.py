@@ -1,8 +1,9 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 def remove_outliers(df, col):
     q1 = df[col].quantile(0.25)
@@ -23,7 +24,7 @@ print(df.info())
 
 print(df.isnull().sum())
 
-df = df.drop(columns=["id", "url", "region_url", "region", "manufacturer", "state", "model", "condition", "fuel", "title_status", "transmission", "VIN" , "drive", "size", "type", "paint_color", "image_url", "description", "county", "lat", "long", "posting_date"])
+df = df.drop(columns=["id", "url", "region", "region_url", "manufacturer", "model", "condition", "fuel", "title_status", "transmission", "VIN", "drive", "size", "type", "paint_color", "image_url", "description", "county", "state", "lat", "long", "posting_date"])
 df = df.dropna()
 
 # no_of_regions = df["region"].value_counts()
@@ -42,17 +43,17 @@ df["cylinders"] = label_encoder.fit_transform(df["cylinders"])
 
 X = df.drop(columns="price")
 X = X.dropna()
-y = df["price"]
+y = np.log1p(df["price"])
 y = y[X.index]
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 lin_reg = LinearRegression()
 
 lin_reg.fit(X_train, y_train)
 print("Coeffecients:", lin_reg.coef_)
 print("Intercept:", lin_reg.intercept_)
 print("R2:", lin_reg.score(X_test, y_test))
-y_pred = lin_reg.predict(X_test)
+y_pred = np.expm1(lin_reg.predict(X_test))
 
 df_test = X_test.copy()
 df_test["price"] = y_test
